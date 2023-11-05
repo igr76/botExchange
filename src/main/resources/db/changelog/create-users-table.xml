@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+		http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+  <changeSet id="create-users-table" author="igor">
+
+    <preConditions>
+      <not>
+        <tableExists tableName="users"/>
+      </not>
+    </preConditions>
+
+    <createTable tableName="users">
+      <column name="chat_id" type="BIGINT" >
+        <constraints primaryKey="true"/>
+      </column>
+      <column name="balance_rub" type="DOUBLE">
+        <constraints unique="true" nullable="true"/>
+      </column>
+      <column name="balance_usd" type="DOUBLE">
+        <constraints unique="true" nullable="true"/>
+      </column>
+      <column name="balance_eur" type="DOUBLE">
+        <constraints unique="true" nullable="true"/>
+      </column>
+    </createTable>
+
+  </changeSet>
+
+</databaseChangeLog>
