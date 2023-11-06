@@ -13,11 +13,15 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -79,8 +83,12 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private void exchangeMoneyCommand(Long chatId,String[] text) {
-        ;
-        sendMessage(chatId, moneyService.exchange(chatId,text[1],Double.parseDouble(text[2])));
+        try {
+            sendMessage(chatId, moneyService.exchange(chatId,text[1],Double.parseDouble(text[2])));
+        } catch (com.example.demo.exception.ServiceException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     private void setMoneyCommand(Long chatId,String[] text) {
@@ -140,9 +148,7 @@ public class Bot extends TelegramLongPollingBot {
                 Для получения текущих курсов валют воспользуйтесь командами:
                 /usd - курс доллара
                 /eur - курс евро
-                /getRub
-                /getUsd
-                /getEur
+                /getMoney
                 /setMoney пополнить счёт, после команды номер валюты и сумма 1-rub  2-usd 3-eur
                 /exchange - обмен валюты меджу счетами, после команжды номер операции и сумма
                  (через олин пробел) 1:rub-usd  2:rub-eur 3:usd-rub 4:usd-eur 
@@ -158,6 +164,13 @@ public class Bot extends TelegramLongPollingBot {
     private void sendMessage(Long chatId, String text) {
         var chatIdStr = String.valueOf(chatId);
         var sendMessage = new SendMessage(chatIdStr, text);
+        ReplyKeyboardMarkup keyboardMarkup =new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboardRows = new ArrayList<>();
+        KeyboardRow row= new KeyboardRow();
+        row.add("/getMoney");row.add("/usd");row.add("/eur ");
+        keyboardRows.add(row);
+        keyboardMarkup.setKeyboard(keyboardRows);
+        sendMessage.setReplyMarkup(keyboardMarkup);
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {

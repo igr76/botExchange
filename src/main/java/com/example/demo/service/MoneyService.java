@@ -7,5 +7,4 @@ public interface MoneyService {
      void saveMoney(long chatId,int id,double money);
      String exchange(long chatId,String id,double money) throws ServiceException;
 
-
 }
