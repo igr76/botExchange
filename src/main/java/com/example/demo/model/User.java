@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
+/** Сущность пользователя */
 @Getter
 @Setter
 @AllArgsConstructor
@@ -15,9 +15,13 @@ import lombok.Setter;
 @Entity
 @Table(name = "users")
 public class User {
+    /** Номер пользователя */
     @Id
     long chatId;
+    /** Рублевый счёт */
     double balanceRub;
+    /** Долларовый  счёт */
     double balanceUsd;
+    /** Евро счёт */
     double balanceEur;
 }

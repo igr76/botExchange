@@ -22,7 +22,7 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-
+/** Управление командами бота */
 @Slf4j
 @Component
 public class Bot extends TelegramLongPollingBot {

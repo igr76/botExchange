@@ -6,7 +6,7 @@ import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.MoneyService;
 import org.springframework.stereotype.Service;
-
+/** Реализация сервиса счетов */
 @Service
 public class MoneyServiceImpl implements MoneyService {
     UserRepository userRepository;
