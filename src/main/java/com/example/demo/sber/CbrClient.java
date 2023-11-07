@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Optional;
-
+/** Канал связи с банком */
 @Component
 public class CbrClient {
 
