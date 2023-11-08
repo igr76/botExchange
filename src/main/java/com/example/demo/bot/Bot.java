@@ -1,6 +1,7 @@
 package com.example.demo.bot;
 
 import com.example.demo.service.ExchangeRatesService;
+import com.example.demo.service.MoneyService;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.service.spi.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,17 +13,23 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 import java.time.LocalDate;
-
+import java.util.ArrayList;
+import java.util.List;
+/** Управление командами бота */
 @Slf4j
 @Component
 public class Bot extends TelegramLongPollingBot {
     @Autowired
     ExchangeRatesService exchangeRatesService;
+    @Autowired
+    private MoneyService moneyService;
     @Value("${bot.name}")
     private String botUsername;
 
@@ -32,6 +39,15 @@ public class Bot extends TelegramLongPollingBot {
     private static final String USD = "/usd";
     private static final String EUR = "/eur";
     private static final String HELP = "/help";
+    private static final String GET = "/getMoney";
+    private static final String SET_MONEY = "/setMoney";
+    private static final String EXCHANGE_MONEY = "/exchange";
+//    private static final String SET_RUB = "/setRub";
+//    private static final String SET_USD = "/setUsd";
+//    private static final String SET_EUR = "/setEur";
+
+
+
     @Override
     public String getBotUsername() {
         return botUsername;
@@ -47,7 +63,9 @@ public class Bot extends TelegramLongPollingBot {
         if (!update.hasMessage() || !update.getMessage().hasText()) {
             return;
         }
-        var message = update.getMessage().getText();
+        String messageTextAfter = update.getMessage().getText();
+        String[] textArray = messageTextAfter.split(" ");
+        String message = textArray[0];
         var chatId = update.getMessage().getChatId();
         switch (message) {
             case START -> {
@@ -57,17 +75,30 @@ public class Bot extends TelegramLongPollingBot {
             case USD -> usdCommand(chatId);
             case EUR -> eurCommand(chatId);
             case HELP -> helpCommand(chatId);
+            case GET -> getMoneyCommand(chatId);
+            case SET_MONEY -> setMoneyCommand(chatId,textArray);
+            case EXCHANGE_MONEY -> exchangeMoneyCommand(chatId,textArray);
             default -> unknownCommand(chatId);
         }
-//        var chatIdStr = String.valueOf(String.valueOf(update.getMessage().getChatId()));
-//        var sendMessage = new SendMessage(chatIdStr, "Hi!");
-//        try {
-//            execute(sendMessage);
-//        } catch (TelegramApiException e) {
-//            e.printStackTrace();
-//            log.error("Ошибка отправки сообщения", e);
-//        }
     }
+
+    private void exchangeMoneyCommand(Long chatId,String[] text) {
+        try {
+            sendMessage(chatId, moneyService.exchange(chatId,text[1],Double.parseDouble(text[2])));
+        } catch (com.example.demo.exception.ServiceException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    private void setMoneyCommand(Long chatId,String[] text) {
+        moneyService.saveMoney(chatId,Integer.parseInt(text[1]),Double.parseDouble(text[2]));
+    }
+
+    private void getMoneyCommand(Long chatId) {
+        sendMessage(chatId,moneyService.getMoney(chatId));
+    }
+
     private void startCommand(Long chatId, String userName) {
         var text = """
                 Добро пожаловать в бот, %s!
@@ -117,6 +148,11 @@ public class Bot extends TelegramLongPollingBot {
                 Для получения текущих курсов валют воспользуйтесь командами:
                 /usd - курс доллара
                 /eur - курс евро
+                /getMoney
+                /setMoney пополнить счёт, после команды номер валюты и сумма 1-rub  2-usd 3-eur
+                /exchange - обмен валюты меджу счетами, после команжды номер операции и сумма
+                 (через олин пробел) 1:rub-usd  2:rub-eur 3:usd-rub 4:usd-eur 
+                  5:eur-rub  6:eur-usd
                 """;
         sendMessage(chatId, text);
     }
@@ -128,6 +164,13 @@ public class Bot extends TelegramLongPollingBot {
     private void sendMessage(Long chatId, String text) {
         var chatIdStr = String.valueOf(chatId);
         var sendMessage = new SendMessage(chatIdStr, text);
+        ReplyKeyboardMarkup keyboardMarkup =new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboardRows = new ArrayList<>();
+        KeyboardRow row= new KeyboardRow();
+        row.add("/getMoney");row.add("/usd");row.add("/eur ");
+        keyboardRows.add(row);
+        keyboardMarkup.setKeyboard(keyboardRows);
+        sendMessage.setReplyMarkup(keyboardMarkup);
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
